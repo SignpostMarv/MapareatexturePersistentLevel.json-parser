@@ -7,27 +7,65 @@ import {
 	writeFile,
 } from 'fs/promises';
 
-const here_is_one_we_made_earlier = `${import.meta.dirname}/../data/MapareatexturePersistentLevel.bin`
+const here_is_one_we_made_earlier = `${
+	import.meta.dirname
+}/../data/MapareatexturePersistentLevel.bin`;
 
 export const mDataWidth = 4096;
 
-export async function json_to_Uint8ClampedArray(): Promise<Uint8ClampedArray|Buffer> {
+/*
+// type too complex
+type hexadecimal = (
+	'0'|'1'|'2'|'3'|'4'|'5'|'6'|'7'|'8'|'9'|'A'|'B'|'C'|'D'|'E'|'F'
+);
+type hexadecimal_pair = `${hexadecimal}${hexadecimal}`;
+type hexadecimal_R = hexadecimal_pair;
+type hexadecimal_G = hexadecimal_pair;
+type hexadecimal_B = hexadecimal_pair;
+type hexadecimal_A = hexadecimal_pair;
+type Hex = `${hexadecimal_A}${hexadecimal_R}${hexadecimal_G}${hexadecimal_B}`;
+*/
+
+export async function json_to_Uint8ClampedArray(
+): Promise<Uint8ClampedArray| Buffer> {
 	if (!existsSync(here_is_one_we_made_earlier)) {
+		const json_promise = import(
+			// todo: check this with Ajv first
+			`${
+				import.meta.dirname
+			}/../data/MapareatexturePersistentLevel.json`,
+			{
+				with: {
+					type: 'json',
+				},
+			}
+		) as Promise<{
+			default: [{
+				Properties: {
+					mAreaData: number[],
+					mColorPalette: {
+						B: number,
+						G: number,
+						R: number,
+						A: number,
+						/*
+						// type too complex
+						Hex: `${Hex}`
+						*/
+						Hex: string,
+					}[],
+					mDataWidth: number,
+				}
+			}]
+		}>;
+
 		const {default: [{
 			Properties: {
 				mAreaData,
 				mColorPalette,
 				mDataWidth: mDataWidth_from_json,
 			},
-		}]} = await import(
-			// todo: check this with Ajv first
-			`${import.meta.dirname}/../data/MapareatexturePersistentLevel.json`,
-			{
-				with: {
-					type: 'json',
-				},
-			}
-		);
+		}]} = await json_promise;
 
 		assert.strictEqual(mDataWidth, mDataWidth_from_json, new Error(
 			`mDataWidth changed!`
@@ -50,4 +88,4 @@ export async function json_to_Uint8ClampedArray(): Promise<Uint8ClampedArray|Buf
 	} else {
 		return readFile(here_is_one_we_made_earlier);
 	}
-};
+}
