@@ -1,17 +1,37 @@
-// todo: check this with Ajv first
-import json from '../data/MapareatexturePersistentLevel.json' with {
-	type: 'json'
-}
+import assert from 'assert';
+import {
+	existsSync,
+} from 'fs';
+import {
+	readFile,
+	writeFile,
+} from 'fs/promises';
 
-const [{
-	Properties: {
-		mAreaData,
-		mColorPalette,
-		mDataWidth,
-	},
-}] = json;
+const here_is_one_we_made_earlier = `${import.meta.dirname}/../data/MapareatexturePersistentLevel.bin`
 
-export function json_to_Uint8ClampedArray(): Uint8ClampedArray {
+export const mDataWidth = 4096;
+
+export async function json_to_Uint8ClampedArray(): Promise<Uint8ClampedArray|Buffer> {
+	if (!existsSync(here_is_one_we_made_earlier)) {
+		const {default: [{
+			Properties: {
+				mAreaData,
+				mColorPalette,
+				mDataWidth: mDataWidth_from_json,
+			},
+		}]} = await import(
+			// todo: check this with Ajv first
+			`${import.meta.dirname}/../data/MapareatexturePersistentLevel.json`,
+			{
+				with: {
+					type: 'json',
+				},
+			}
+		);
+
+		assert.strictEqual(mDataWidth, mDataWidth_from_json, new Error(
+			`mDataWidth changed!`
+		))
 
 	const data = new Uint8ClampedArray(mDataWidth * mDataWidth * 4);
 
@@ -24,9 +44,10 @@ export function json_to_Uint8ClampedArray(): Uint8ClampedArray {
 		data.set([R, G, B, A], index * 4);
 	}
 
-	return data;
-};
+	await writeFile(here_is_one_we_made_earlier, data);
 
-export {
-	mDataWidth,
-}
+	return data;
+	} else {
+		return readFile(here_is_one_we_made_earlier);
+	}
+};

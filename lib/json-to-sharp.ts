@@ -6,9 +6,9 @@ import sharp, {
 	type Sharp,
 } from 'sharp';
 
-export function json_to_sharp(): Sharp
+export async function json_to_sharp(): Promise<Sharp>
 {
-	return sharp(json_to_Uint8ClampedArray(), {
+	return sharp(await json_to_Uint8ClampedArray(), {
 		raw: {
 			premultiplied: false,
 			width: mDataWidth,
